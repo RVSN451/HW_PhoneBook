@@ -1,5 +1,7 @@
 package com.kostakov.netologi.phoneBook;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class UserInterface {
@@ -8,7 +10,10 @@ public class UserInterface {
         System.out.println("\nВыберите и введите номер из пункта меню:" +
                 "\n   1. Создать новые группы" +
                 "\n   2. Внести новый контакт в телефонную книгу" +
-                "\n   3. Распечатать телефонную книгу" +
+                "\n   3. Распечатать телефонную книгу\n" +
+                "\n   4. Добавить пропущенные вызовы" +
+                "\n   5. Очистить список пропущенных вызовов" +
+                "\n   6. Распечатать список пропущенных вызовов\n" +
                 "\n   0. Завершить работу программы");
     }
 
@@ -72,7 +77,10 @@ public class UserInterface {
     public static void addingContactToPhoneBook(PhoneBook phoneBook) {
         PhoneContact contact = newContact();
         String[] titlesGroup = groupsSelection(phoneBook);
-        phoneBook.addContact(contact, titlesGroup);
+        if (!phoneBook.addContact(contact, titlesGroup)) {
+            System.out.println("Контакт [" + contact + "] НЕ ДОБАВЛЕН в телефонную книгу." +
+                    "\nНе указано/не верно указано название группы, в которую необходимо добавить контакт.");
+        };
     }
 
     public static String printTitleGroup(PhoneBook phoneBook) {
@@ -93,8 +101,9 @@ public class UserInterface {
             Set<String> keys = phoneBook.getGroupNameList();
             StringBuilder result = new StringBuilder();
 
-            result.append("СПИСОК КОНТАКТОВ ТЕЛЕФОННОЙ КНИГИ:\n");
+            result.append("\nСПИСОК КОНТАКТОВ ТЕЛЕФОННОЙ КНИГИ:");
             for (String gr : keys) {
+                //Collections.sort(phoneBook.getContactGroup().get(gr));
                 int itemInGroup = 1;
                 result.append("\nКонтакты, включенные в группу '" + gr.toUpperCase() + "':\n");
                 List<PhoneContact> listGroupContact = phoneBook.getGroupContactList(gr);
@@ -109,5 +118,47 @@ public class UserInterface {
             }
             System.out.println(result);
         }
+    }
+
+    public static void addingMissedCall (MissedPhoneCall missedCall) {
+        String line;
+        System.out.println("Ведите номера пропущенных взовов." +
+                "\nВведите 'Стоп' для выхода.");
+
+        while (true) {
+            line = Main.consoleReadString();
+            if (line.equalsIgnoreCase("стоп")) {
+                break;
+            } else {
+                missedCall.addMissedCall(line);
+            }
+        }
+    }
+
+    public static void printMissedCall (PhoneBook phoneBook, MissedPhoneCall missedCall) {
+        StringBuilder result = new StringBuilder();
+
+        if (missedCall.isEmpty()) {
+            System.out.println("\nПРОПУЩЕННЫЕ ВЫЗОВЫ ОТСУТСТВУЮТ.");
+        } else {
+            int i = 1; // счетчик пропущенных вызовов
+            result.append("\nСПИСОК ПРОПУЩЕННЫХ ВЫЗОВОВ:");
+            for (Map.Entry<LocalDateTime, String> missedCallUnit: missedCall.entrySet()) {
+                LocalDateTime time = missedCallUnit.getKey();
+                String phoneNumber = missedCallUnit.getValue();
+                PhoneContact contact = phoneBook.findContact(phoneNumber);
+                DateTimeFormatter data = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+                DateTimeFormatter hour = DateTimeFormatter.ofPattern("HH-mm");
+
+                if (contact == null) {
+                    result.append("\n\t" + i + ". " + data.format(time) + "г. " + hour.format(time) + ". " + phoneNumber);
+                    i++;
+                } else {
+                    result.append("\n\t" + i + ". " + data.format(time) + "г. " + hour.format(time) + ". " + contact);
+                    i++;
+                }
+            }
+        }
+        System.out.println(result);
     }
 }

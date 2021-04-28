@@ -4,7 +4,8 @@ import java.util.*;
 
 public class PhoneBook {
 
-    private Map<String, List<PhoneContact>> contactGroup = new HashMap<>();
+    private Map<String, List<PhoneContact>> contactGroup = new HashMap<>(); //Ключ - название групп
+    private Map<String, PhoneContact> contactPhone = new HashMap<>(); // Ключ - номер телефона
 
     public boolean addGroup(String titleGroup) {
 
@@ -16,13 +17,19 @@ public class PhoneBook {
         }
     }
 
-    public void addContact(PhoneContact contact, String[] titlesGroup) {
+    public boolean addContact(PhoneContact contact, String[] titlesGroup) {
+        boolean isAddedToGroup = false;
         for (String s : titlesGroup) {
             if (contactGroup.containsKey(s)) {
                 contactGroup.get(s).add(contact);
-                Collections.sort(contactGroup.get(s)); //TODO Проверить работоспособность
+                isAddedToGroup = true;
+                Collections.sort(contactGroup.get(s));
             }
         }
+        if (isAddedToGroup) {
+            contactPhone.put(contact.getPhoneNumber(), contact);
+        }
+        return isAddedToGroup;
     }
 
     public Set getGroupNameList() {
@@ -31,5 +38,13 @@ public class PhoneBook {
 
     public List getGroupContactList(String nameGroup){
         return (List) contactGroup.get(nameGroup);
+    }
+
+    public PhoneContact findContact (String phoneNumber) {
+        if (contactPhone.containsKey(phoneNumber)) {
+            return contactPhone.get(phoneNumber);
+        } else {
+            return null;
+        }
     }
 }
